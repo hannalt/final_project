@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 8000;
 //mongodb+srv://hanna:<kcb8cXbzGAEzdGlJ>@useraccounts.bx3zc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 //heroku => comp426finalhannalt
 
-const url = "mongodb+srv://hanna:kcb8cXbzGAEzdGlJ@useraccounts.bx3zc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-const client = new MongoClient(url, { useUnifiedTopology: true });
+//const url = "mongodb+srv://hanna:kcb8cXbzGAEzdGlJ@useraccounts.bx3zc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+//const client = new MongoClient(url, { useUnifiedTopology: true });
 
 //const sockets = require('./routes/sockets');
 
@@ -32,7 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }))
 
 
-async function run() {
+/*async function run() {
     try {
         await client.connect();
         console.log("Connected correctly to server");
@@ -43,7 +43,7 @@ async function run() {
         await client.close();
     }
 }
-run().catch(console.dir);
+run().catch(console.dir);*/
 
 app.use(morgan('tiny'));
 app.use('/api', routes);
