@@ -1,9 +1,8 @@
-import React, {useState} from 'react';
+import React from 'react';
 import Sketch from 'react-p5';
 import './AppDark.css';
 import DarkMode from './components/DarkMode';
 import Blob from './blob';
-import socketIOClient from "socket.io-client";
 const axios = require('axios');
 //let server = app.listen(3000);
 //let io = require('socket.io')(server);
@@ -130,7 +129,7 @@ class App extends React.Component {
       return;
     }
     const same_username = users.find(user => user.username === username);
-    if (same_username == undefined) {
+    if (same_username === undefined) {
       this.state.msg  = 'Wrong username. Try again or make a new account!';
       this.resetUserInputs();
       return;
