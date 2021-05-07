@@ -8,7 +8,7 @@ const { MongoClient } = require('mongodb');
 const http = require('http');
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT; //|| 8000;
 //hanna kcb8cXbzGAEzdGlJ
 //mongodb+srv://hanna:<kcb8cXbzGAEzdGlJ>@useraccounts.bx3zc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 //heroku => comp426finalhannalt
@@ -18,10 +18,10 @@ const PORT = process.env.PORT || 8000;
 
 //const sockets = require('./routes/sockets');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/mern_youtube', {
+mongoose.connect(process.env.MONGODB_URI , {
     useNewUrlParser: true,
     useUnifiedTopology: true
-})
+}) //|| 'mongodb://localhost/mern_youtube'
 
 mongoose.connection.on('connected', () => {
     console.log('Mongoose is connected')
