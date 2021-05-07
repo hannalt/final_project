@@ -2,8 +2,14 @@ import React, {useState} from 'react';
 import Sketch from 'react-p5';
 import './AppDark.css';
 import DarkMode from './components/DarkMode';
-
+import Blob from './blob';
+import socketIOClient from "socket.io-client";
 const axios = require('axios');
+//let server = app.listen(3000);
+//let io = require('socket.io')(server);
+
+
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -76,12 +82,12 @@ class App extends React.Component {
       data: payload
     })
       .then(() => {
-        console.log("data has been sent");
+        //console.log("data has been sent");
         this.resetUserInputs();
         //call do something if needed
       })
       .catch(()=> {
-        console.log("error");
+        //console.log("error");
       })
   }
   resetUserInputs = () => {
@@ -97,7 +103,7 @@ class App extends React.Component {
   }
   //in example this gets an updated list of blog posts each time one is submitted
   dosomething = () => {
-    console.log("do something")
+    //console.log("do something")
     //do something everytime the page needs to load
   }
 
@@ -106,6 +112,7 @@ class App extends React.Component {
 
   submitLogin = async (event) =>{
     event.preventDefault();
+    console.log('submitlogin')
     const username = this.state.username;
     const password = this.state.password;
     const response = await axios.get('/api');
@@ -129,7 +136,7 @@ class App extends React.Component {
       return;
     }
     
-    console.log('same_user: ', same_username);
+    //console.log('same_user: ', same_username);
     if (same_username.password === password) {
       this.getJoke();
       this.setState({
@@ -139,7 +146,7 @@ class App extends React.Component {
         question: same_username.question,
         answer: same_username.answer
       });
-      console.log('Login state:', this.state)
+      //console.log('Login state:', this.state)
       this.state.msg  = 'You are logged in!';
     } else {
       this.state.msg = 'That was not correct. Try again!';
@@ -211,10 +218,10 @@ class App extends React.Component {
 
   submitRetrieving = async (event) => {
     event.preventDefault();
-    console.log(event);
+    //console.log(event);
     const attempting_answer = event.target[0].value;
-    console.log(attempting_answer);
-    console.log(this.state);
+    //console.log(attempting_answer);
+    //console.log(this.state);
     if (this.state.answer === attempting_answer){
       this.state.msg = 'Good job! Your password is ' + this.state.password + '. Go back to Login!'
       this.resetUserInputs();
@@ -245,31 +252,126 @@ class App extends React.Component {
   }
 
   canvasInfo = {
-    socket: undefined, 
-   
+    blob: undefined,
+    zoom: 1,
+    blobs:[],
+    counter: 30,
+    timer: undefined,
+    interval: undefined
   }
 
-  setup = (p5, canvasParentRef) => {
-    let xyz = p5.createCanvas(600, 600);
+  timeIt = () => {
+    if (this.state.playing) {
+      if (this.canvasInfo.counter <= 0) {
+        this.canvasInfo.counter = 0
+      } else {
+        this.canvasInfo.counter--;
+      }
+      
+      this.canvasInfo.timer.html(this.canvasInfo.counter)
+    }
+    
+  }
+
+  setup = (p5) => {
+    this.canvasInfo.timer = p5.select('#timer');
+    this.canvasInfo.timer.html(this.canvasInfo.counter);
+    this.canvasInfo.interval = setInterval(this.timeIt, 1000);
+
+    let width = 600;
+    let height = 600;
+    let xyz = p5.createCanvas(width, height);
     let x = (p5.windowWidth - p5.width) / 2;
     let y = (p5.windowHeight - p5.height) / 2;
     xyz.position(x, y);
-    //this.canvasInfo.socket = io.connect('http://localhost:4000')
+    let blobs = [];
+    let dumb_num = 200;
+    for (let i = 0; i < dumb_num; i++) {
+      blobs[i] = new Blob(p5, p5.random(3,5),p5.random(-600, 600), p5.random(-600, 600), i,   "no user");
+      
+    }
+    this.canvasInfo.blobs = blobs;
+    
+    this.canvasInfo.blob = new Blob(p5, 13, p5.random(width), p5.random(height), 6573454, this.state.username);
+    console.log(this.canvasInfo.blob);
   }
 
   draw = (p5) => {
-    p5.background("rgb(100%,0%,10%)");
+    if (this.canvasInfo.blob.alive){
+    
+      p5.background(0); 
+      p5.translate(p5.width/2, p5.height/2);
+      let new_scale = 64 / this.canvasInfo.blob.r;
+      this.canvasInfo.zoom = p5.lerp(this.canvasInfo.zoom, new_scale, 0.02);
+      p5.scale(this.canvasInfo.zoom);
+      p5.translate(-this.canvasInfo.blob.pos.x, -this.canvasInfo.blob.pos.y);
+      for (let i = this.canvasInfo.blobs.length-1; i >= 0; i--) {
+        let id = this.canvasInfo.blobs[i].id;
+        //This is how you avoid drawing/eating yourself.
+        
+        if (id !== this.canvasInfo.id){
+          //This checks if blob has eaten blob[i] 
+          
+          if (this.canvasInfo.blob.eats(this.canvasInfo.blobs[i])){
+            this.canvasInfo.blobs.splice(i,1); 
+            this.canvasInfo.blobs.push(new Blob(p5, p5.random(1,5),p5.random(-600, 600), p5.random(-600, 600), i, "no user"));
+          } else {
+            //If it isn't eaten it gets drawn onto the screen using p5 functions
+            this.canvasInfo.blobs[i].show()  
+  
+          }
+            
+        } 
+      }
+      this.canvasInfo.blob.show();
+      //blob only moves toward your mouse if it is pressed.
+      if (p5.mouseIsPressed){
+        this.canvasInfo.blob.update();
+      }
+      //keeps it in bounds
+      this.canvasInfo.blob.constrain();
+
+      if (this.canvasInfo.counter === 0) {
+        this.canvasInfo.blob.alive = false;
+      }
+    } else {
+      p5.background(0);
+      p5.fill(this.canvasInfo.blob.red, this.canvasInfo.blob.green, this.canvasInfo.blob.blue);
+      p5.textSize(60);
+      p5.textAlign(p5.CENTER);
+      p5.text('Game Over',300, 300);
+      p5.textSize(30);
+      p5.text('Your Score:', 300, 400);
+      p5.text(Math.round(this.canvasInfo.blob.r), 300, 450)
+    }
   }
 
-  //add the recovery question and image thing to the form
-  //Change what you return if they are logged in or not
+  goBack = (event) => {
+    event.preventDefault();
+    clearInterval(this.canvasInfo.interval)
+    this.setState({
+      register: false,
+      retrieving: false,
+      loggedin: true,
+      playing:false
+    });
+    this.canvasInfo.counter = 30;
+    
+    
+  }
+
+  //add back button from game 
   render() {
-    console.log(this.state);
     
     if(this.state.playing) {
       return (
         <div className="App">
+          <h1>Play the Game!</h1>
+          <p>You have these many seconds remaining:</p>
+          <h3 id="timer">2:00</h3>
+          <p>Eat as many balls as you can before time runs out!</p>
           <Sketch setup={this.setup} draw={this.draw} className = "App"/>
+          <button onClick= {this.goBack}>Go Back</button>
         </div>
       )
   

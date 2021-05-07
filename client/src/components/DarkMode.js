@@ -29,7 +29,6 @@ const DarkMode = () => {
         }
     }
 
-    console.log('here')
 
     return (
         <button
